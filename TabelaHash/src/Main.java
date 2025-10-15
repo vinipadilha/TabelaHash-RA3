@@ -1,3 +1,5 @@
+import dados.GeradorDados;
+import modelo.Registro;
 import tabelas.*;
 import utilitarios.Metricas;
 import utilitarios.Temporizador;
