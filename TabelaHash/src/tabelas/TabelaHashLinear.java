@@ -114,7 +114,6 @@ public class TabelaHashLinear implements TabelaHash {
             if (pos == start) {
                 break;
             }
-            break; // deu a volta
         }
         return false; // não encontrou
     }
