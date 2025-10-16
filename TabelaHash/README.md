@@ -1,5 +1,4 @@
-# Gera README.md COMPLETO com análise, justificativas, estrutura do projeto e autoria
-cat > README.md << 'EOF'
+
 # 📊 Relatório — Análise de Tabelas Hash em Java
 
 ## 🎯 Objetivo
