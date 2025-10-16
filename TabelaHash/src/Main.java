@@ -7,13 +7,11 @@ import utilitarios.Gaps;
 
 public class Main {
 
-    // ===== Tamanhos oficiais da tabela (primos, ≈x10) =====
     static final int M1 = 1_003;
     static final int M2 = 10_007;
     static final int M3 = 100_003;
     static final int[] MS = { M1, M2, M3 };
 
-    // ===== IDs das funções hash =====
     static final int HASH_DIV = 1;
     static final int HASH_MUL = 2;
     static final int HASH_ULT = 3;
@@ -26,55 +24,42 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        // ===== Datasets OFICIAIS (n, seed) — usar exatamente estes =====
         rodarDataset("100k", GeradorDados.N_100K, GeradorDados.SEED_100K);
         rodarDataset("1M",   GeradorDados.N_1M,   GeradorDados.SEED_1M);
-        // 10M: modo streaming (sem criar vetor gigantesco)
         rodarDatasetStreaming("10M", GeradorDados.N_10M, GeradorDados.SEED_10M);
     }
 
     private static void rodarDataset(String rotuloDataset, int n, long seed) {
-        // Gera UMA VEZ e reutiliza para todas as combinações (exigência do trabalho)
         Registro[] dados = GeradorDados.gerar(n, seed);
 
-        // Cabeçalho CSV (uma vez por dataset)
         System.out.println("dataset,tabela,funcHash,m,n,tempoInsercao_ms,colisoesInsercao,tempoBusca_ms,gapMin,gapMax,gapMedio");
 
-        // Loop: Tabela × Função × m
         for (String tabelaNome : new String[] { "Linear", "Encadeada", "Dupla" }) {
             for (int func : FUNCS) {
                 for (int m : MS) {
 
-                    // Regras práticas:
-                    // - Endereçamento aberto (Linear/Dupla) funciona bem com n <= m (α ≤ 1).
-                    //   Para evitar “tabela cheia”, pulamos essas combinações quando n > m.
                     if ((tabelaNome.equals("Linear") || tabelaNome.equals("Dupla")) && n > m) {
-                        continue; // pula combinação inviável para rehashing
+                        continue;
                     }
 
-                    // Cria a tabela específica desta rodada
                     TabelaHash tabela = criarTabela(tabelaNome, m, func);
 
-                    // Métricas/tempo
                     Metricas met = new Metricas(); met.reset();
                     Temporizador tmp = new Temporizador();
 
-                    // INSERÇÃO
                     tmp.iniciar();
                     for (Registro r : dados) {
                         tabela.inserir(r.codigo, met);
                     }
                     met.tempoInsercaoNanos = tmp.nanosDecorridos();
 
-                    // GAPS (apenas para Linear/Dupla; Encadeada retorna null)
                     int[] vetor = tabela.vetorBruto();
                     if (vetor != null) {
                         Gaps.calcularGaps(vetor, met);
                     } else {
-                        met.gapMin = 0; met.gapMax = 0; met.gapMedio = 0.0; // N/A
+                        met.gapMin = 0; met.gapMax = 0; met.gapMedio = 0.0;
                     }
 
-                    // BUSCA (presentes)
                     tmp.iniciar();
                     int achou = 0;
                     for (Registro r : dados) {
@@ -82,7 +67,6 @@ public class Main {
                     }
                     met.tempoBuscaNanos = tmp.nanosDecorridos();
 
-                    // Saída CSV (ms; gaps N/A = 0,0,0.0)
                     double insMs = met.tempoInsercaoNanos / 1_000_000.0;
                     double busMs = met.tempoBuscaNanos / 1_000_000.0;
 
@@ -95,13 +79,11 @@ public class Main {
         }
     }
 
-    // Fábrica simples de tabelas
     private static TabelaHash criarTabela(String nome, int m, int func) {
         if (nome.equals("Linear"))    return new TabelaHashLinear(m, func);
         if (nome.equals("Encadeada")) return new TabelaHashEncadeada(m, func);
-        return new TabelaHashDupla(m, func); // "Dupla"
+        return new TabelaHashDupla(m, func);
     }
-    // ===== Versão streaming: gera e processa os dados "on-the-fly" (sem array) =====
     private static void rodarDatasetStreaming(String rotuloDataset, int n, long seed) {
         System.out.println("dataset,tabela,funcHash,m,n,tempoInsercao_ms,colisoesInsercao,tempoBusca_ms,gapMin,gapMax,gapMedio");
 
@@ -109,7 +91,6 @@ public class Main {
             for (int func : FUNCS) {
                 for (int m : MS) {
 
-                    // Evita rodar combinações inviáveis (n > m em rehashing)
                     if ((tabelaNome.equals("Linear") || tabelaNome.equals("Dupla")) && n > m) {
                         continue;
                     }
@@ -118,16 +99,14 @@ public class Main {
                     Metricas met = new Metricas(); met.reset();
                     Temporizador tmp = new Temporizador();
 
-                    // ============ INSERÇÃO (stream) ============
                     java.util.Random rndIns = new java.util.Random(seed);
                     tmp.iniciar();
                     for (int i = 0; i < n; i++) {
-                        int codigo = rndIns.nextInt(1_000_000_000); // código 9 dígitos
+                        int codigo = rndIns.nextInt(1_000_000_000);
                         tabela.inserir(codigo, met);
                     }
                     met.tempoInsercaoNanos = tmp.nanosDecorridos();
 
-                    // ====== GAPS (só se for Linear ou Dupla) ======
                     int[] vetor = tabela.vetorBruto();
                     if (vetor != null) {
                         Gaps.calcularGaps(vetor, met);
@@ -135,8 +114,7 @@ public class Main {
                         met.gapMin = 0; met.gapMax = 0; met.gapMedio = 0.0;
                     }
 
-                    // ============ BUSCA (stream) ============
-                    java.util.Random rndBusca = new java.util.Random(seed); // mesma seed → mesmos dados
+                    java.util.Random rndBusca = new java.util.Random(seed);
                     tmp.iniciar();
                     int achou = 0;
                     for (int i = 0; i < n; i++) {
@@ -145,7 +123,6 @@ public class Main {
                     }
                     met.tempoBuscaNanos = tmp.nanosDecorridos();
 
-                    // ====== Saída CSV ======
                     double insMs = met.tempoInsercaoNanos / 1_000_000.0;
                     double busMs = met.tempoBuscaNanos / 1_000_000.0;
 

@@ -46,8 +46,6 @@ Essas decisões garantem reprodutibilidade, simplicidade e aderência total às 
 | 2  | **Multiplicação**   | `h(k) = ⌊m*(k*A − ⌊k*A⌋)⌋`, com `A ≈ 0.618` | Boa distribuição independente da forma dos dados.                             |
 | 3  | **Últimos Dígitos** | Usa os últimos 5 dígitos de `k`             | Simula dispersão em códigos com sufixos variados. Escolhida para comparação. |
 
-> Todas as funções foram **implementadas manualmente**; não foram usadas funções prontas do slide.
-
 ---
 
 ## 🔢 Tabelas Hash Implementadas
@@ -103,7 +101,18 @@ CSV consolidado (exemplo resumido):
 | 1M      | Encadeada | Divisão       | 100003 | 1.000.000  | 13,856        | 5.897.749   | 48,684     | 0      | 0      | 0,00     |
 | 10M     | Encadeada | Últimos       | 100003 | 10.000.000 | 210,681       | 509.907.423 | 47074,652  | 0      | 0      | 0,00     |
 
-> CSV completo disponível no repositório.
+> XLS completo disponível no repositório.
+
+---
+
+## 📊 Gráficos e Visualizações
+
+Os gráficos detalhados dos resultados estão disponíveis no arquivo **Dados Hash.xlsx** incluído no repositório, contendo:
+
+- Gráficos de tempo de inserção por função hash
+- Análise de colisões por tipo de tabela
+- Comparação de performance entre datasets
+- Visualizações de gaps e distribuição de dados
 
 ---
 
@@ -157,11 +166,9 @@ CSV consolidado (exemplo resumido):
 - Tamanhos de vetores escolhidos para ter variação x10 entre eles.  
 - A terceira função hash “Últimos dígitos” foi escolhida para comparar dispersão com outras funções clássicas.  
 - Top-3 listas encadeadas identificadas (valores disponíveis no CSV).  
-- (Opcional) Memória: análise de overhead mostra que Encadeada consome mais memória por node, mas permite escalabilidade.
 
 ---
 
 ## 👥 Autoria
 
 Trabalho realizado por: **Arthur Cidral, Vinicius Padilha e Bernardo Vieira**  
-Inclui código comentado e versão sem comentários para prova de autoria.
