@@ -183,6 +183,5 @@ Por isso:
 
 ## 👥 Autoria
 
-Trabalho individual (ou em grupo até 4).  
-Código original, comentado e em conformidade com todas as restrições da atividade.  
-Inclui versão **com comentários** e **sem comentários** (prova de autoria).
+Trabalho realizado por: Arthur Cidral, Vinicius Padilha e Bernardo Vieira 
+
