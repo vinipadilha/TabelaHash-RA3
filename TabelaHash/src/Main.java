@@ -29,7 +29,8 @@ public class Main {
         // ===== Datasets OFICIAIS (n, seed) — usar exatamente estes =====
         rodarDataset("100k", GeradorDados.N_100K, GeradorDados.SEED_100K);
         rodarDataset("1M",   GeradorDados.N_1M,   GeradorDados.SEED_1M);
-        rodarDataset("10M",  GeradorDados.N_10M,  GeradorDados.SEED_10M);
+        // 10M: modo streaming (sem criar vetor gigantesco)
+        rodarDatasetStreaming("10M", GeradorDados.N_10M, GeradorDados.SEED_10M);
     }
 
     private static void rodarDataset(String rotuloDataset, int n, long seed) {
@@ -100,4 +101,61 @@ public class Main {
         if (nome.equals("Encadeada")) return new TabelaHashEncadeada(m, func);
         return new TabelaHashDupla(m, func); // "Dupla"
     }
+    // ===== Versão streaming: gera e processa os dados "on-the-fly" (sem array) =====
+    private static void rodarDatasetStreaming(String rotuloDataset, int n, long seed) {
+        System.out.println("dataset,tabela,funcHash,m,n,tempoInsercao_ms,colisoesInsercao,tempoBusca_ms,gapMin,gapMax,gapMedio");
+
+        for (String tabelaNome : new String[] { "Linear", "Encadeada", "Dupla" }) {
+            for (int func : FUNCS) {
+                for (int m : MS) {
+
+                    // Evita rodar combinações inviáveis (n > m em rehashing)
+                    if ((tabelaNome.equals("Linear") || tabelaNome.equals("Dupla")) && n > m) {
+                        continue;
+                    }
+
+                    TabelaHash tabela = criarTabela(tabelaNome, m, func);
+                    Metricas met = new Metricas(); met.reset();
+                    Temporizador tmp = new Temporizador();
+
+                    // ============ INSERÇÃO (stream) ============
+                    java.util.Random rndIns = new java.util.Random(seed);
+                    tmp.iniciar();
+                    for (int i = 0; i < n; i++) {
+                        int codigo = rndIns.nextInt(1_000_000_000); // código 9 dígitos
+                        tabela.inserir(codigo, met);
+                    }
+                    met.tempoInsercaoNanos = tmp.nanosDecorridos();
+
+                    // ====== GAPS (só se for Linear ou Dupla) ======
+                    int[] vetor = tabela.vetorBruto();
+                    if (vetor != null) {
+                        Gaps.calcularGaps(vetor, met);
+                    } else {
+                        met.gapMin = 0; met.gapMax = 0; met.gapMedio = 0.0;
+                    }
+
+                    // ============ BUSCA (stream) ============
+                    java.util.Random rndBusca = new java.util.Random(seed); // mesma seed → mesmos dados
+                    tmp.iniciar();
+                    int achou = 0;
+                    for (int i = 0; i < n; i++) {
+                        int codigo = rndBusca.nextInt(1_000_000_000);
+                        if (tabela.contem(codigo)) achou++;
+                    }
+                    met.tempoBuscaNanos = tmp.nanosDecorridos();
+
+                    // ====== Saída CSV ======
+                    double insMs = met.tempoInsercaoNanos / 1_000_000.0;
+                    double busMs = met.tempoBuscaNanos / 1_000_000.0;
+
+                    System.out.printf("%s,%s,%s,%d,%d,%.3f,%d,%.3f,%d,%d,%.2f%n",
+                            rotuloDataset, tabelaNome, nomeFunc(func), m, n,
+                            insMs, met.colisoesInsercao, busMs, met.gapMin, met.gapMax, met.gapMedio
+                    );
+                }
+            }
+        }
+    }
+
 }
